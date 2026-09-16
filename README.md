@@ -33,8 +33,8 @@ can be provided in the add-on options:
   - `/^catch-all@mydomain\.com$/` for a catch-all email,
   - `/^user@email-provider\.com$/` for plus and subdomain addressing.
 
-Both are optional but recommended in order to prevent unintended
-consequences.
+Both are optional but recommended in order to produce a more deterministic
+behavior.
 
 TODO: check min version for this add-on
 
@@ -51,15 +51,31 @@ the sender.
 
 It was implemented under
 [Bug 1518025](https://bugzilla.mozilla.org/show_bug.cgi?id=1518025),
-but it does not seem to work consistently (see for example
+but it does not seem to always work consistently (see for example
 [Bug 1869057](https://bugzilla.mozilla.org/show_bug.cgi?id=1869057)
 and [1652147](https://bugzilla.mozilla.org/show_bug.cgi?id=1652147))
 and it hasn't been properly documented outside of bug reports.
 Part of the issue is the order in which headers are checked, and if the first
-match happens to be the catch-all/main address, it may match the glob pattern.
+match happens to be the catch-all/main address, it may be used instead of the
+custom address.
 The [Config Editor](https://support.mozilla.org/en-US/kb/config-editor) allows
-for modifying the order in which headers are checked, but this may not always
+for modifying the order in which headers are checked, but it may not always
 be possible to find a combination that works in all cases.
+
+Hence the need for some more deterministic sender selection this add-on aims
+to provide by using patterns to ensure the proper custom email is used.
+
+## Possible enhancements
+
+1. Allow for glob patterns as well, they are simpler. Internally they need to
+   be translated into regex patterns, so this is what is developed first.
+2. Store the custom address against each recipient. If multiple recipient,
+   choose the one that was used in previous emails, otherwise allow to select
+   which one or create a new one.
+3. Allow different patterns per mail account, while not removing the simplicity
+   of just setting them for all accounts.
+4. If multiple custom email addresses match, allow for selecting one,
+   or display some warning at least.
 
 ## Credits
 
