@@ -1,0 +1,7 @@
+#msgIdentity.from-invalid {
+    outline: 2px solid light-dark(#cc0000, #ff6b6b) !important;
+    outline-offset: -1px;
+}
+#msgIdentity {
+  outline: 4px yellow !important;
+}

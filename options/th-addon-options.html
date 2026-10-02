@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="th-addon-options.css">
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <h3 id="validating-the-sender-address">Validating the sender address</h3>
+  <p>To ensure a proper email address is used as sender in the <em>From</em>
+    field, two patterns should be provided:</p>
+  <ul>
+    <li> 
+      <div class="option-group">
+        <label for="fromPattern"><strong>From Pattern:</strong></label>
+        <input type="text" id="fromPattern" class="option-input"
+               placeholder="e.g. *@mydomain.com or re:[^@]+@mydomain\\.com"/>
+        <p class="error" id="fromPattern-error" role="alert"></p>
+        <p class="hint">
+          A pattern the <em>From</em> field must satisfy.
+          For example:
+          <ul>
+            <li><code>*@mydomain.com</code> or the equivalent <code>re:[^@]+@mydomain\.com</code> for a catch-all situation,</li>
+            <li><code>user+*@mydomain.com</code> or the equivalent <code>re:user\+[^@]+@email-provider\.com</code>
+            for plus addressing,</li>
+            <li><code>user@*.mydomain.com</code> or the equivalent <code>re:user@[^@.]+\.domain\.com</code> for subdomain addressing.</li>
+          </ul>
+        </p>
+      </div>
+    </li>
+    <li>
+      <div class="option-group">
+        <label for="notFromPattern"><strong>Not From Pattern:</strong></label>
+        <input type="text" id="notFromPattern" class="option-input"
+               placeholder="e.g. me@mydomain.com"/>
+        <p class="error" id="notFromPattern-error" role="alert"></p>
+        <p class="hint">
+          The <em>From</em> address must not match this pattern.
+          Useful to protect your main address from being used as sender,
+          e.g. <code>me@mydomain.com</code>.
+        </p>
+      </div>
+    </li>
+  </ul>
+  <p>Both patterns are optional but recommended in order to produce a more deterministic
+  outcome.</p>
+  <p>A <em>pattern</em> can be one of:</p>
+  <ul>
+    <li>a string to be matched exactly as is in a case-insensitve way</li>
+    <li>a <a href="https://en.wikipedia.org/wiki/Glob_(programming">glob</a>
+      pattern which may contain the following syntax elements:
+      <ul>
+        <li><code>?</code> matches one and only one character</li>
+        <li><code>*</code> matches zero or more characters</li>
+        <li><code>[abc]</code> matches one and only one of the characters
+          listed in brackets</li>
+        <li><code>{abc,efg,ijk}</code> matches one of the alternatives given
+          in braces and separated by commas</li>
+      </ul>
+    </li>
+    <li>a <a href="https://en.wikipedia.org/wiki/Regular_expression">Regular Expression</a>
+      prefixed with <code>re:</code> and following the
+      <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_expressions">JavaScript syntax</a>
+      (without the surrounding <code>/</code>).</li>
+  </ul>
+  <script type="module" src="th-addon-options-onload.js"></script>
+  <script type="module" src="options.js"></script>
+</body>
+</html>
