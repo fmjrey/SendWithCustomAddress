@@ -7,91 +7,19 @@ import { log } from "./log.js";
 import * as alias from "./alias.js";
 import { ADDON_prefs } from "./options/th-addon-options.js";
 
-/*
-Logging flow
-============
-Thunderbird does not centralize all add-on log/console messages in one place.
-To that end logging is defined in the log.js ES module for consumption by
-high level ES modules that can afford the dependency.
-A similarly shaped logging logic can be found in shared/log-classic.js for
-consumption by classic scripts via Thunderbird script injection/registration.
-That classic version forwards logging to background.js, by message passing, so
-they can be printed on the add-on console, where all messages are centralized.
-The verbosity level is defined in log.js and pushed by background.js
-to the setVerbose message handler defined in log-classic.js.
-
-background.js (high level ES module)
-  import { log } from "./log.js"
-  │
-  │  log.info("..."), log.warn("..."), etc.
-  │  output to the console visible when inspecting/debugging add-ons
-  │
-  │  pushVerbose() → tabs.sendMessage({ type: "setVerbose", 
-  |                          |          verbose: log.getVerbose() })
-  │                          │
-  │                          ▼
-  │                    shared/log-classic.js injected in compose window sets
-  │                    window.__alias.Log.setVerbose(verbose)
-  │                          │
-  |                    the classic script compose.js can now call 
-  │                    Log.info("..."), Log.debug("..."), etc.
-  │                          │
-  │                    sendMessage({ type: "log", cfn, args })
-  │                          │
-  │                          ▼
-  │                    background.js onMessage
-  │                    console[cfn]("[compose]", ...args)
-  │                          │
-  │                          ▼
-  │                    Debug Add-ons console where you see everything
-  │
-alias.js (High level ES module)
-  import { log } from "./log.js"
-  │
-  │  provides pattern.js (low level utility ES module that can't afford a
-  |  dependency to log.js) with a reference to log.warn so that skipped
-  |  patterns are logged as warnings
-  │
-options/options.js (ES module that can afford the log.js dependency)
-  import { log } from "../log.js"
-  │
-  │  log.warn("Invalid pattern in ...") visible in add-on console
-*/
-
 // --- Alias aggregate ---
 const source = () => ADDON_prefs.getPrefs(alias.STORAGE_KEYS);
 
 async function init() {
   await alias.rebuild(source);
-  pushVerbose();
 }
 
 init();
-
-// --- Push verbose to all compose windows ---
-function pushVerbose() {
-  browser.tabs
-    .query({ windowType: "messageCompose" })
-    .then((tabs) =>
-      tabs.forEach((tab) =>
-        browser.tabs
-          .sendMessage(tab.id, {
-            type: "setVerbose",
-            verbose: log.getVerbose(),
-          })
-          .catch(() => {}),
-      ),
-    );
-}
 
 // Live updates
 messenger.storage.local.onChanged.addListener((changes) => {
   if (alias.STORAGE_KEYS.some((k) => changes[k])) {
     alias.rebuild(source);
-  }
-  if (changes.verbose) {
-    verbose = changes.verbose.newValue;
-    pushVerbose();
   }
 });
 
@@ -115,21 +43,6 @@ browser.runtime.onMessage.addListener((msg) => {
     */
   }
 });
-
-// Inject/register compose script
-const existing = await messenger.scripting.compose.getRegisteredScripts({
-  ids: ["compose-with-alias"],
-});
-if (existing.length === 0) {
-  await messenger.scripting.compose.registerScripts([
-    {
-      id: "compose-with-alias",
-      js: ["shared/log-classic.js", "compose/compose.js"],
-      css: ["compose/compose.css"],
-    },
-  ]);
-  log.info("compose script registered");
-}
 
 const on_compose_start = async (tab, win) => {
   // HACK: in some scenarios (draft, mailto, auto-bcc), calling
@@ -258,10 +171,8 @@ const set_compose_focus = async (tab_id, target, opt) => {
     await messenger.compose.setComposeDetails(tab_id, { [target]: orig_v });
   } else if (target == "body") {
     //await messenger.tabs.executeScript(tab_id, { code: "window.focus()" });
-    await messenger.scripting.executeScript({
-      target: { tabId: tab_id },
-      func: () => window.focus(),
-    });
+    const tab = await messenger.tabs.get(tab_id);
+    await messenger.windows.update(tab.windowId, { focused: true });
   } else {
     throw new Error("Invalid focus target: " + target);
   }
