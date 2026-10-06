@@ -52,17 +52,22 @@ A *pattern* can be one of:
 
 ## Logic
 
-In all cases a valid sender email address must match **From Pattern**
-BUT NOT **Not From Pattern**. A visual cue warns the user a
-valid sender email must be set.
+**Sender address validation**: the sender email address must match **From Pattern**
+BUT NOT **Not From Pattern**.
 
-On opening a compose email a valid sender email is searched as follows:
- 1. Check the currently filled **From** value and if valid stop processing
- 3. If the mail is a reply
-    3.1 search for a valid sender among all recipients of the email being
-        replied to
-    3.1 else check the from field of the email being replied to, and use it
-        if it's a valid sender
+**When composing a new email**: a candidate sender email is searched as follows:
+ 1. Check the currently filled **From** value and if it's a valid sender address
+    stop further processing
+ 2. If the mail being composed is a reply
+    2.1 Check the `From` field of the email being replied to, and use it
+        if it's a valid sender. This covers the case of replying to one's
+        own email.
+    2.1 Otherwise search for a valid sender among all recipients of the email
+        being replied to, the first found wins.
+
+On pressing **Send** the sender is again verified. If invalid, a popup message
+provides the reason for not being valid, and offers a way to go back or to send
+anyway.
 
 ## Partial support from Thunderbird
 
@@ -99,7 +104,7 @@ to provide by using patterns to ensure the proper custom email is used.
 
 ## Possible enhancements
 
-1. Simplify code as it may no longer be necessary to have all these
+1. DONE Simplify code as it may no longer be necessary to have all these
    complicated delays in getting some values. See the following:
    - https://bugzilla.mozilla.org/show_bug.cgi?id=1675012
    - https://bugzilla.mozilla.org/show_bug.cgi?id=1785851 which seems to
@@ -107,8 +112,9 @@ to provide by using patterns to ensure the proper custom email is used.
      may still return stale recipient data
    - [this addon](https://github.com/gversluis/thunderbird-alias-reply-catchall)
      has a very simple code but only for the onCreated event.
-1. Check minimum version requirements with respects to Manifest V3.
-1. DONE Better styling on options page with light/dark theme, may be provided by
+1. Check minimum version requirements with respects to Manifest V3. For now
+   the minimum version is Thunderbird 128, but this isn't tested, just infered.
+1. DONE Better styling with light/dark theme, may be provided by
    [this project](https://github.com/micz/Thunderbird-Addon-Options-Manager).
 2. Translations.
 3. Allow different options per mail account. Check this

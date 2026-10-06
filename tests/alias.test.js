@@ -33,11 +33,11 @@ describe("alias", () => {
         });
 
         await rebuildWith({ fromPattern: "re:[broken", notFromPattern: "" });
-        assert.strictEqual(alias.validate("anything@x.com").valid, true);
+        assert.strictEqual(alias.validateFrom("anything@x.com").valid, true);
         assert.ok(warnings.pop().includes("skipped"));
 
         await rebuildWith({ fromPattern: "", notFromPattern: "re:[broken" });
-        assert.strictEqual(alias.validate("anything@x.com").valid, true);
+        assert.strictEqual(alias.validateFrom("anything@x.com").valid, true);
         assert.ok(warnings.pop().includes("skipped"));
 
         assert.strictEqual(warnings.length, 0);

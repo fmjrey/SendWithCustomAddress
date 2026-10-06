@@ -1,0 +1,36 @@
+/* addon.css
+ * Shared base styling for all addon pages.
+ * Mimics Thunderbird native look via color-scheme + minimal overrides.
+ */
+
+:root {
+  color-scheme: light dark;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  font-size: 0.75rem;  /* = 12px, matches TB default */
+  margin: 0;
+  padding: 0;
+}
+
+/* Form controls inherit the theme via color-scheme,
+   but these normalize cross-platform sizing: */
+input, button, select {
+  font-size: inherit;
+  box-sizing: border-box;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* Utility: monospace for code/addresses */
+code, .mono {
+  font-family: ui-monospace, "SFMono-Regular", "Menlo", "Consolas", monospace;
+  font-size: 1.05em;
+}
+
+/* Status colors (semantic, not theme-dependent) */
+.valid { color: light-dark(#0a0, #4f4); }
+.invalid { color: light-dark(#c00, #f66); }   

@@ -1,13 +1,7 @@
-:root {
-  color-scheme: light dark;
-}
+@import url("../addon.css");
 
-code {
-  font-size: 1.2em;
-}
-
+/* Page-specific rules */
 .error {
-  color: light-dark(#c00, #f66);
   font-size: 0.9em;
   min-height: 1.2em;
 }
@@ -21,7 +15,7 @@ input[aria-invalid="true"] {
 }
 
 input.option-input {
-  font-family: ui-monospace, "SFMono-Regular", "Menlo", "Consolas", monospace;
+  font-family: ui-monospace, monospace;
   font-size: 0.95em;
   width: 100%;
   box-sizing: border-box;
@@ -30,4 +24,7 @@ input.option-input {
 .option-group {
   border-color: color-mix(in srgb, currentColor 20%, transparent);
   background-color: color-mix(in srgb, currentColor 5%, transparent);
-}   
+  padding: 8px;
+  margin-top: 8px;
+  border-radius: 4px;
+}

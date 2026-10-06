@@ -1,0 +1,36 @@
+@import url("../addon.css");
+
+/* Page-specific rules */
+body {
+  width: 300px;
+  padding: 12px;
+}
+
+h2 {
+  font-size: 0.8125rem;
+  margin: 0 0 8px;
+}
+
+.from {
+  font-family: ui-monospace, monospace;
+  font-size: 0.9em;
+  margin-bottom: 4px;
+}
+
+.status {
+  margin-bottom: 12px;
+}
+
+.buttons {
+  display: none;
+  gap: 8px;
+}
+
+.buttons button {
+  flex: 1;
+  padding: 6px 10px;
+}
+
+.buttons button.primary {
+  font-weight: 600;
+}

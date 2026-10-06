@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "SendWithCustomAddress",
     "version": "0.0.1",
-    "description": "Manage your custom alias addresses, for now in From: field when replying to an email",
+    "description": "Manage your custom alias addresses to prefill and validate the From: field.",
     "browser_specific_settings": {"gecko": {
         "id": "SendWithCustomAddress@addons.thunderbird.net",
         "strict_min_version": "128.0"
@@ -11,6 +11,9 @@
     "background": {
         "scripts": ["background.js"],
         "type": "module"
+    },
+    "compose_action": {
+        "default_popup": "compose/popup.html"
     },
     "options_ui": {
         "page": "options/th-addon-options.html",

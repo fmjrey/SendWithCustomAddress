@@ -4,6 +4,19 @@
 
 let _verbose = 3;
 
+function caller() {
+  const stack = new Error().stack.split("\n");
+  for (let i = 1; i < stack.length; i++) {
+    const m = stack[i].trim().match(/^(.+):(\d+):\d+[)]?\s*$/);
+    if (m) {
+      const file = m[1].split("/").pop();
+      if (file === "log.js") continue;
+      return `${file}:${m[2]}`;
+    }
+  }
+  return "";
+}
+
 /**
  * Leveled logger for the background context.
  *
@@ -24,8 +37,10 @@ let _verbose = 3;
 export const log = (conf, ...args) => {
   if (typeof conf === "string") conf = { cfn: conf };
   if (conf.verbose && _verbose < conf.verbose) return;
-  console[conf.cfn || "log"](...args);
+  const loc = caller();
+  console[conf.cfn || "log"](`[${loc}]`, ...args);
 };
+
 log.error = log.bind(log, { cfn: "error" });
 log.warn  = log.bind(log, { cfn: "warn" });
 log.info  = log.bind(log, { cfn: "log", verbose: 1 });
