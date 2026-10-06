@@ -1,8 +1,8 @@
 {
     "manifest_version": 3,
     "name": "SendWithCustomAddress",
-    "version": "0.0.1",
-    "description": "Manage your custom alias addresses to prefill and validate the From: field.",
+    "version": "0.1.0",
+    "description": "Send from custom address using patterns: prefill sender for replies and validates sender before sending.",
     "browser_specific_settings": {"gecko": {
         "id": "SendWithCustomAddress@addons.thunderbird.net",
         "strict_min_version": "128.0"

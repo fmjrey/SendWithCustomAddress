@@ -1,1 +1,9 @@
-*.xpi
+*.json
+!manifest.json
+releases/
+dist/
+research/
+working/
+.vscode/
+.dir-locals.el
+

@@ -39,12 +39,63 @@ if [ $FORCE != 1 ]; then
     fi
 fi
 
-# publishing
-echo "creating xpi file..."
-FILENAME="${NAME}_${VERSION}"
-rm -f "./$FILENAME.xpi"
-(set -x; zip "./$FILENAME.xpi" ./manifest.json ./*.js)
+# Files to include in the .xpi (relative to repo root)
+FILES=(
+  "*.js"
+  "addon.css"
+  "LICENSE"
+  "manifest.json"
+  "options/*"
+  "compose/*"
+)
 
+# Expand globs
+shopt -s nullglob   # unmatched patterns vanish instead of staying literal
+EXPANDED=()
+for pattern in "${FILES[@]}"; do
+  for f in $pattern; do   # expands globs
+    EXPANDED+=("$f")
+  done
+done
+shopt -u nullglob
+
+# --- Check all listed files are committed (no uncommitted changes) ---
+UNCOMMITTED=()
+for f in "${EXPANDED[@]}"; do
+  # git status --porcelain shows changes; empty means clean
+  if [[ -n "$(git status --porcelain -- "$f")" ]]; then
+    UNCOMMITTED+=("$f")
+  fi
+done
+
+if [[ ${#UNCOMMITTED[@]} -gt 0 ]]; then
+  echo "ERROR: The following files have uncommitted changes:" >&2
+  printf '  %s\n' "${UNCOMMITTED[@]}" >&2
+  echo "Commit them before publishing." >&2
+  exit 1
+fi
+
+# Build the .xpi
+echo "copying files..."
+DIST="dist"
+rm -rf "$DIST"
+mkdir -p "$DIST"
+
+for f in "${EXPANDED[@]}"; do
+  mkdir -p "$DIST/$(dirname "$f")"
+  cp "$f" "$DIST/$f"
+done
+
+echo "creating xpi file..."
+RELEASES="releases"
+FILENAME="${RELEASES}/${NAME}_${VERSION}.xpi"
+rm -f $FILENAME
+cd "$DIST"
+zip -r "../$FILENAME" .
+cd ..
+rm -rf "$DIST"
+
+# publishing
 if [ $DRY_RUN != 1 ]; then
     echo "publishing..."
     (set -x; gh release create "v$VERSION" -t "v$VERSION" "./$FILENAME.xpi" )
