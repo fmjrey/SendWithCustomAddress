@@ -17,7 +17,7 @@
                placeholder="e.g. *@mydomain.com or re:[^@]+@mydomain\\.com"/>
         <p class="error" id="fromPattern-error" role="alert"></p>
         <p class="hint">
-          A pattern the <em>From</em> field must satisfy.
+          A pattern the <em>From</em> address must satisfy.
           For example:
           <ul>
             <li><code>*@mydomain.com</code> or the equivalent <code>re:[^@]+@mydomain\.com</code> for a catch-all situation,</li>
@@ -36,14 +36,14 @@
         <p class="error" id="notFromPattern-error" role="alert"></p>
         <p class="hint">
           The <em>From</em> address must not match this pattern.
-          Useful to protect your main address from being used as sender,
+          Useful to avoid leaking your main/catch-all address,
           e.g. <code>me@mydomain.com</code>.
         </p>
       </div>
     </li>
   </ul>
   <p>Both patterns are optional but recommended in order to produce a more deterministic
-  outcome.</p>
+  outcome when sending emails.</p>
   <p>A <em>pattern</em> can be one of:</p>
   <ul>
     <li>a string to be matched as-is in a case-insensitve way</li>
