@@ -152,7 +152,6 @@ export function compilePattern(str) {
 
     if (!body)
       return { valid: false, type: "regex", pattern: str, regex: null, error: "Empty regex after re:" };
-
     try {
       return { valid: true, type: "regex", pattern: str, regex: new RegExp(body, flags) };
     } catch (e) {

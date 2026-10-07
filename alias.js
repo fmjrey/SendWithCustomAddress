@@ -31,13 +31,10 @@ function assertInitialized() {
  *
  * If a pattern is syntactically invalid, the error is swallowed:
  * the validation falls back to permissive (always valid) and a
- * warning is emitted via the `log` function from options.
+ * warning is emitted via `log.js`.
  *
  * @param {() => Promise<{fromPattern: string, notFromPattern: string}>} source
  *        Async function returning the stored prefs object.
- * @param {object} [options]
- * @param {(msg: string) => void} [options.log]
- *   Warning callback. Defaults to a no-op.
  */
 export async function rebuild(source) {
   const prefs = await source();
@@ -60,9 +57,9 @@ export async function rebuild(source) {
     });
   }
 
-  _validateFrom = createValidator(descriptors, {satisfy: "all",
-                                                skipInvalid: true,
-                                                log: (msg) => log.warn(msg)});
+  _validateFrom = createValidator(descriptors, { satisfy: "all",
+                                                 skipInvalid: true,
+                                                 log: log.warn });
 
   _initialized = true;
 }

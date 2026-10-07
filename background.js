@@ -48,7 +48,7 @@ messenger.tabs.onCreated.addListener(async (tab) => {
   for (let i = 1; i < 5; i++) {
     try {
       details = await messenger.compose.getComposeDetails(tab.id);
-      log.info(`getComposeDetails #${i}`, json2(details));
+      log.info(`getComposeDetails #${i}`, details);
       break;
     } catch (e) {
       if (i === 4) {
@@ -64,13 +64,13 @@ messenger.tabs.onCreated.addListener(async (tab) => {
 
   try {
     const full = await messenger.messages.getFull(details.relatedMessageId);
-    log.debug("related message", json2(full));
+    log.debug("related message", full);
     const mailboxes = await extractMailboxes(
       full.headers,
       ["from", "x-original-to", "delivered-to", "envelope-to", "to"],
       stringToMailbox,
     );
-    log.debug("mailboxes", json2(mailboxes));
+    log.debug("mailboxes", mailboxes);
 
     // Find the first candidate that satisfies validation:
     const match = mailboxes.find((m) => alias.validateFrom(m.email).valid);
@@ -100,15 +100,15 @@ messenger.tabs.onRemoved.addListener((tabId) => {
 
 // --- onBeforeSend: validate and optionally block ---
 messenger.compose.onBeforeSend.addListener(async (tab, details) => {
-  log.debug("onBeforeSend details", json2(details));
+  log.debug("onBeforeSend details", details);
   const fromMailboxes = await normalizeRecipient(details.from, stringToMailbox);
   const from = fromMailboxes[0]?.email || "";
-  log.debug("onBeforeSend from", json2(from));
+  log.debug("onBeforeSend from", from);
 
   if (!from) return;
 
   const result = alias.validateFrom(from);
-  log.debug("onBeforeSend validateFrom", json2(result));
+  log.debug("onBeforeSend validateFrom", result);
   if (result.valid) return; // no issue, proceed
 
   // Show the popup:
@@ -182,6 +182,3 @@ browser.runtime.onMessage.addListener(async (msg) => {
 // -- utils --
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(() => resolve(), ms));
-
-const json2 = (v) => JSON.stringify(v, null, 2);
-const json0 = (v) => JSON.stringify(v);
