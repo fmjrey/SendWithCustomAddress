@@ -161,7 +161,7 @@ be done before a public release.
 2. TODO Allow different options per mail account. Check this
    [addon](https://github.com/gversluis/thunderbird-alias-reply-catchall)
    for inspiration.
-3. For instant validation of the sender address when it changes, check
+3. DONE For instant validation of the sender address when it changes, check
    [onIdentityChanged](https://webextension-api.thunderbird.net/en/esr-mv3/compose.html#onidentitychanged).
 4. Store the custom address against each recipient. If multiple recipients,
    choose the one that was used in previous emails, otherwise allow to select

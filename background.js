@@ -39,10 +39,16 @@ const stringToMailbox = messenger.messengerUtilities?.parseMailboxString
         .then((p) => addRaw(p, str))
   : defaultParse;
 
+// Track compose windows with a map from tabId to "compose" | "sending".
+const stages = new Map();
+
 // --- onCreated: prefill From on reply ---
 messenger.tabs.onCreated.addListener(async (tab) => {
   if (tab.type !== "messageCompose") return;
+  stages.set(tab.id, "compose");
   log.info("compose tab created:", tab.id);
+  await setButtonState(tab.id, "reset");
+  ensurePolling();
 
   let details;
   for (let i = 1; i < 5; i++) {
@@ -70,7 +76,7 @@ messenger.tabs.onCreated.addListener(async (tab) => {
       ["from", "x-original-to", "delivered-to", "envelope-to", "to"],
       stringToMailbox,
     );
-    log.debug("mailboxes", mailboxes);
+    log.debug("extracted mailboxes", mailboxes);
 
     // Find the first candidate that satisfies validation:
     const match = mailboxes.find((m) => alias.validateFrom(m.email).valid);
@@ -87,19 +93,13 @@ messenger.tabs.onCreated.addListener(async (tab) => {
 });
 log.debug("onCreated listener registered");
 
-// Track compose windows with a map from tabId to "compose" | "sending".
-const stages = new Map();
-messenger.tabs.onCreated.addListener((tab) => {
-  if (tab.type === "messageCompose") {
-    stages.set(tab.id, "compose");
-  }
-});
 messenger.tabs.onRemoved.addListener((tabId) => {
   stages.delete(tabId);
 });
 
 // --- onBeforeSend: validate and optionally block ---
 messenger.compose.onBeforeSend.addListener(async (tab, details) => {
+  stages.set(tab.id, "sending");
   log.debug("onBeforeSend details", details);
   const fromMailboxes = await normalizeRecipient(details.from, stringToMailbox);
   const from = fromMailboxes[0]?.email || "";
@@ -112,7 +112,6 @@ messenger.compose.onBeforeSend.addListener(async (tab, details) => {
   if (result.valid) return; // no issue, proceed
 
   // Show the popup:
-  stages.set(tab.id, "sending");
   await messenger.composeAction.enable(tab.id);
   const opened = await messenger.composeAction.openPopup({
     windowId: tab.windowId,
@@ -151,33 +150,83 @@ log.debug("onBeforeSend listener registered");
 browser.runtime.onMessage.addListener(async (msg) => {
   switch (msg.type) {
     case "getValidationState":
-      log.debug("getValidationState", msg);
-      if (!msg.tabId) {
-        return { stage: stages.get(msg.tabId), valid: true, message: "", from: "" };
-      }
-      try {
-        const details = await messenger.compose.getComposeDetails(msg.tabId);
-        const fromMailboxes = await normalizeRecipient(
-          details.from,
-          stringToMailbox,
-        );
-        const from = fromMailboxes[0]?.email || "";
-        const result = alias.validateFrom(from);
-        const response = {
-          stage: stages.get(msg.tabId),
-          valid: result.valid,
-          message: result.message,
-          from
-        };
-        log.debug("getValidationState response", response);
-        return response;
-      } catch (e) {
-        return { stage: stages.get(msg.tabId), valid: true, message: "", from: "" };
-      }
+      const response = await getValidationState(msg.tabId);
+      log.debug("getValidationState", response);
+      return response;
     case "validateFrom":
       return Promise.resolve(alias.validateFrom(msg.address));
   }
 });
+
+async function getValidationState(tabId) {
+  if (!tabId || !stages.has(tabId)) {
+    return { valid: true, message: "", from: "" };
+  }
+  try {
+    const details = await messenger.compose.getComposeDetails(tabId);
+    const fromMailboxes = await normalizeRecipient(
+      details.from,
+      stringToMailbox,
+    );
+    const from = fromMailboxes[0]?.email || "";
+    const result = alias.validateFrom(from);
+    const response = {
+      stage: stages.get(tabId),
+      valid: result.valid,
+      message: result.message,
+      from,
+    };
+    return response;
+  } catch (e) {
+    return { stage: stages.get(tabId), valid: true, message: "", from: "" };
+  }
+}
+
+/*
+The button icon needs to change according to the validation state.
+The composeAction API event `onIdentityChanged` provides a hook to detect
+identity change in the From field.
+One caveat: manually changing the From adress overrides the header but does
+not change the identity. So if a user manually edits the From field in the
+compose window rather than switching identities, onIdentityChanged won't fire.
+Regular polling of `getComposeDetails(tabId).from` is required.
+*/
+
+const ICONS = {
+  valid:   { 32: "icons/alias-valid.svg",   48: "icons/alias-valid.svg" },
+  invalid: { 32: "icons/alias-invalid.svg", 48: "icons/alias-invalid.svg" },
+};
+
+async function setButtonState(tabId, state) {
+  if (state === "reset") return; // default_icon from manifest applies
+  await messenger.composeAction.setIcon({ tabId, path: ICONS[state] });
+}
+
+messenger.compose.onIdentityChanged.addListener(async (tab, identityId) => {
+  const identity = await messenger.identities.get(identityId);
+  log.debug("onIdentityChanged", tab.id, identity);
+  const { valid } = alias.validateFrom(identity.email);
+  await setButtonState(tab.id, valid ? "valid" : "invalid");
+});
+log.debug("onIdentityChanged listener registered");
+
+// same poll timer for all compose tabs
+let pollTimer = null;
+
+function ensurePolling() {
+  if (pollTimer) return;
+  pollTimer = setInterval(async () => {
+    for (const [tabId, stage] of stages) {
+      if (stage !== "compose") continue;
+      const { valid } = await getValidationState(tabId);
+      await setButtonState(tabId, valid ? "valid" : "invalid");
+    }
+    if (stages.size === 0) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+  }, 2000);
+}
 
 // -- utils --
 

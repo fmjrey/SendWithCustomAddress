@@ -41,13 +41,13 @@ fi
 
 # Files to include in the .xpi (relative to repo root)
 FILES=(
-  "icon.svg"
   "*.js"
   "addon.css"
+  "compose/*"
+  "icons/*"
   "LICENSE"
   "manifest.json"
   "options/*"
-  "compose/*"
 )
 
 # Expand globs

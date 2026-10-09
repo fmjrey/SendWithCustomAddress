@@ -4,21 +4,21 @@
     "version": "0.1.0",
     "description": "Send from custom address using patterns: prefill sender for replies and validates sender before sending.",
     "icons": {
-        "32": "icon.svg",
-        "48": "icon.svg"
+        "32": "icons/icon.svg",
+        "48": "icons/icon.svg"
     },
     "browser_specific_settings": {"gecko": {
         "id": "SendWithCustomAddress@addons.thunderbird.net",
         "strict_min_version": "128.0"
     }},
-    "permissions": ["storage", "compose", "tabs","messagesRead"],
+    "permissions": ["storage", "compose", "tabs","messagesRead", "accountsRead"],
     "background": {
         "scripts": ["background.js"],
         "type": "module"
     },
     "compose_action": {
         "default_popup": "compose/popup.html",
-        "default_icon": "icon.svg"
+        "default_icon": "icons/icon.svg"
     },
     "options_ui": {
         "page": "options/th-addon-options.html",
