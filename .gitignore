@@ -1,5 +1,6 @@
 *.json
 !manifest.json
+node_modules/
 releases/
 dist/
 research/

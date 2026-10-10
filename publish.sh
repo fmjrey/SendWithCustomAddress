@@ -70,6 +70,29 @@ for f in "${EXPANDED[@]}"; do
   cp "$f" "$DIST/$f"
 done
 
+# --- Generate dependency graph (markdown + mermaid) ---
+if ! npx --no-install depcruise --version &>/dev/null; then
+  echo "⚠️  dependency-cruiser not installed? Try:"
+  echo "   npm install --save-dev dependency-cruiser"
+  exit 1
+fi
+
+MERMAID=$(npx depcruise "$DIST" --no-config --output-type mermaid)
+
+# Rename the subgraph label
+MERMAID="${MERMAID//\[\"$(basename "$DIST")\"\]/[\"$NAME<br>.\"]}"
+
+# Switch to top-down
+#MERMAID="${MERMAID/flowchart LR/flowchart TD}"
+
+{
+  echo "## Dependency Graph"
+  echo ""
+  echo '```mermaid'
+  echo "$MERMAID"
+  echo '```'
+} > "docs/dependency-graph.md"
+
 # Build the .xpi
 echo "creating xpi file..."
 RELEASES="releases"
@@ -78,7 +101,7 @@ rm -f $FILENAME
 cd "$DIST"
 zip -r "../$FILENAME" .
 cd ..
-rm -rf "$DIST"
+#rm -rf "$DIST"
 
 # publishing
 if [ $DRY_RUN != 1 ]; then

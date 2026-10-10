@@ -1,6 +1,9 @@
 /* options.js
  * ES module, options page validation.
  */
+
+// @ts-nocheck
+
 import { log } from "../log.js";
 import { compilePattern } from "../pattern.js";
 import { STORAGE_KEYS as fields } from "../alias.js";

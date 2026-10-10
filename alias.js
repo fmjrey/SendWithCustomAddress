@@ -2,14 +2,49 @@
  * Aggregate (in DDD speak) root for aliases and their association to recipients.
  * For now handle From address validation and search logic.
  * Likely to grow into explicitly stored associations.
- * Pure, no Thunderbird/DOM dependencies.
+ * No Thunderbird dependencies to facilitate testing.
  */
 
 import { log } from "./log.js";
+import { extractMailboxes, normalizeHeaders } from "./message.js";
 import { compilePattern, createValidator } from "./pattern.js";
+
+/**
+ * @typedef {import("./message.js").AddressFieldsSource} AddressFieldsSource
+ * @typedef {import("./message.js").ParsedRecipient} ParsedRecipient
+ * @typedef {import("./message.js").NormalizedHeaders} NormalizedHeaders
+ */
 
 // --- Storage keys (match the HTML input ids in the options page) ---
 export const STORAGE_KEYS = ["fromPattern", "notFromPattern"];
+
+// --- List of all possible header fields containing addresses ---
+export const SENDER_HEADERS = [
+  "from",
+  "sender",
+  "reply-to",
+  "return-path",
+  "resent-from",
+  "resent-sender",
+  "x-envelope-from",
+  "x-env-from",
+  "x-sender",
+];
+
+export const RECIPIENT_HEADERS = [
+  "to",
+  "cc",
+  "bcc",
+  "delivered-to",
+  "envelope-to",
+  "x-original-to",
+  "x-envelope-to",
+  "resent-to",
+  "resent-cc",
+  "resent-bcc",
+];
+
+export const ALL_HEADERS = [...SENDER_HEADERS, ...RECIPIENT_HEADERS];
 
 // --- State ---
 let _initialized = false;
@@ -19,7 +54,9 @@ let _validateFrom = null;
 // --- Guard ---
 function assertInitialized() {
   if (!_initialized) {
-    throw new Error("alias.js: not initialized — call rebuild() before any operation.");
+    throw new Error(
+      "alias.js: not initialized — call rebuild() before any operation.",
+    );
   }
 }
 
@@ -57,9 +94,11 @@ export async function rebuild(source) {
     });
   }
 
-  _validateFrom = createValidator(descriptors, { satisfy: "all",
-                                                 skipInvalid: true,
-                                                 log: log.warn });
+  _validateFrom = createValidator(descriptors, {
+    satisfy: "all",
+    skipInvalid: true,
+    log: log.warn,
+  });
 
   _initialized = true;
 }
@@ -85,6 +124,22 @@ export async function rebuild(source) {
 export function validateFrom(address) {
   assertInitialized();
   return _validateFrom(address);
+}
+
+/**
+ * Return the best sender candidate found in the message being replied to.
+ * @param {AddressFieldsSource} parent
+ * @returns {Promise<{sender: ParsedRecipient | undefined,
+ *                    relatedHeaders: NormalizedHeaders}>}
+ */
+export async function bestSenderFor(parent) {
+  const relatedHeaders = await normalizeHeaders(parent, ALL_HEADERS);
+  const mailboxes = extractMailboxes(relatedHeaders, ALL_HEADERS);
+  log.debug("bestSenderFor: extracted mailboxes", mailboxes);
+
+  // Find the first candidate that satisfies validation:
+  const sender = mailboxes.find((m) => m.email && validateFrom(m.email).valid);
+  return {sender: sender, relatedHeaders};
 }
 
 /**

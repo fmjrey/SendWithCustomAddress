@@ -1,10 +1,13 @@
 {
   "compilerOptions": {
-    "tabSize": 2,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": true,
+    "noImplicitAny": false,
     "target": "ES2022",
     "module": "ES2022",
     "moduleResolution": "bundler",
-    "strict": true,
-    "types": ["webextension-polyfill"]
-  }
+    "types": ["webextension-polyfill", "node"]
+  },
+  "exclude": ["options/th-*"],
 }

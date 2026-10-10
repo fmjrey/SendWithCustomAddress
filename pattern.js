@@ -3,7 +3,7 @@
  *   - validate patterns strings
  *   - convert glob into regex
  *   - create a validation function by combining several patterns
- * No Thunderbird/DOM dependencies.
+ * No Thunderbird dependencies to facilitate testing.
  */
 
 /**
@@ -49,7 +49,8 @@ export function globToRegex(glob) {
     const c = glob[i];
 
     if (c === "\\") {
-      if (i + 1 >= glob.length) throw new Error("Dangling escape at end of glob");
+      if (i + 1 >= glob.length)
+        throw new Error("Dangling escape at end of glob");
       re += escapeLiteral(glob[i + 1]);
       i += 2;
     } else if (c === "*") {
@@ -93,7 +94,10 @@ export function globToRegex(glob) {
   try {
     return new RegExp(re, "i");
   } catch (e) {
-    throw new Error("Malformed regex from glob: " + e.message);
+    throw new Error(
+      "Malformed regex from glob: " +
+        (e instanceof Error ? e.message : String(e)),
+    );
   }
 }
 
@@ -151,18 +155,41 @@ export function compilePattern(str) {
     }
 
     if (!body)
-      return { valid: false, type: "regex", pattern: str, regex: null, error: "Empty regex after re:" };
+      return {
+        valid: false,
+        type: "regex",
+        pattern: str,
+        regex: null,
+        error: "Empty regex after re:",
+      };
     try {
-      return { valid: true, type: "regex", pattern: str, regex: new RegExp(body, flags) };
+      return {
+        valid: true,
+        type: "regex",
+        pattern: str,
+        regex: new RegExp(body, flags),
+      };
     } catch (e) {
-      return { valid: false, type: "regex", pattern: str, regex: null, error: "Invalid regex: " + e.message };
+      return {
+        valid: false,
+        type: "regex",
+        pattern: str,
+        regex: null,
+        error: "Invalid regex: " + (e instanceof Error ? e.message : String(e)),
+      };
     }
   }
 
   try {
     return { valid: true, type: "glob", pattern: str, regex: globToRegex(str) };
   } catch (e) {
-    return { valid: false, type: "glob", pattern: str, regex: null, error: "Invalid glob: " + e.message };
+    return {
+      valid: false,
+      type: "glob",
+      pattern: str,
+      regex: null,
+      error: "Invalid glob: " + (e instanceof Error ? e.message : String(e)),
+    };
   }
 }
 
@@ -188,9 +215,10 @@ const ALWAYS_VALIDATE = (s) => ({ value: s, valid: true, message: null });
  * @returns {(str: string) => {value: string, valid: boolean, message: string|null}}
  * @throws {Error} If a descriptor is invalid and `skipInvalid` is false.
  */
-export function createValidator(descriptors, { satisfy = "all",
-                                               skipInvalid = false,
-                                               log = () => {} } = {}) {
+export function createValidator(
+  descriptors,
+  { satisfy = "all", skipInvalid = false, log = () => {} } = {},
+) {
   const compiled = [];
 
   for (const d of descriptors) {
@@ -201,11 +229,13 @@ export function createValidator(descriptors, { satisfy = "all",
       }
       throw new Error(`Invalid pattern "${d.pattern}": ${d.error}`);
     }
-    if (d.regex) { // skip patterns of type none
-      compiled.push({regex: d.regex,
-                     validWhenMatch: d.validWhenMatch,
-                     invalidMessage: d.invalidMessage || `Failed on pattern "${d.pattern}"`,
-    });
+    if (d.regex) {
+      // skip patterns of type none
+      compiled.push({
+        regex: d.regex,
+        validWhenMatch: d.validWhenMatch,
+        invalidMessage: d.invalidMessage || `Failed on pattern "${d.pattern}"`,
+      });
     }
   }
 
@@ -214,7 +244,7 @@ export function createValidator(descriptors, { satisfy = "all",
     return ALWAYS_VALIDATE;
   }
 
-  return function validateFrom(str) {
+  return function validate(str) {
     for (const { regex, validWhenMatch, invalidMessage } of compiled) {
       const matched = regex.test(str);
       const valid = validWhenMatch ? matched : !matched;
@@ -231,7 +261,10 @@ export function createValidator(descriptors, { satisfy = "all",
 
     // "any" mode but none passed so join all messages
     const messages = compiled.map((p) => p.invalidMessage).filter(Boolean);
-    return { value: str, valid: false,
-             message: messages.length ? messages.join("\n") : null };
+    return {
+      value: str,
+      valid: false,
+      message: messages.length ? messages.join("\n") : null,
+    };
   };
 }

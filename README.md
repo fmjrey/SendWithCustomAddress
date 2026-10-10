@@ -1,4 +1,4 @@
-# SendWithCustomAddress
+# Send With Custom Address
 
 > [!IMPORTANT]
 > **WORK IN PROGRESS**
@@ -94,6 +94,11 @@ A *pattern* can be one of:
 On pressing **Send** the sender is again verified. If invalid, a popup message
 provides the reason for not being valid, and offers a way to go back or to send
 anyway.
+
+## Dependency Graph
+
+See the [docs/dependency-graph.md](docs/dependency-graph.md) for a generated
+visual overview of module relationships.
 
 ## Partial support from Thunderbird
 

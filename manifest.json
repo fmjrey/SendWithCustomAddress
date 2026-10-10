@@ -1,6 +1,6 @@
 {
     "manifest_version": 3,
-    "name": "SendWithCustomAddress",
+    "name": "Send With Custom Address",
     "version": "0.1.0",
     "description": "Send from custom address using patterns: prefill sender for replies and validates sender before sending.",
     "icons": {

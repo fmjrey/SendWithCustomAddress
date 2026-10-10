@@ -2,6 +2,9 @@
 // run with `node --test`
 // or
 // `node --test --experimental-test-tag-filter="smoke"`
+
+// @ts-nocheck
+
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { globToRegex, compilePattern, createValidator } from "../pattern.js";

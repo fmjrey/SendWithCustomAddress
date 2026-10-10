@@ -2,12 +2,15 @@
 // run with `node --test`
 // or
 // `node --test --experimental-test-tag-filter="smoke"`
+
+// @ts-nocheck
+
 import { test, describe, before } from "node:test";
 import assert from "node:assert";
 import * as alias from "../alias.js";
 
 async function rebuildWith(prefs, options) {
-  await alias.rebuild(async () => prefs, options);
+  await alias.rebuild(async () => prefs);
 }
 
 describe("alias", () => {

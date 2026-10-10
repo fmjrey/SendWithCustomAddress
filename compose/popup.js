@@ -3,13 +3,21 @@
  * Retrieves validation reason from background, and sends back user's decision.
  */
 
+// @ts-nocheck
+
+import {
+  ComposeStatus,
+  MSG_GET_VALIDATION_STATE,
+  MSG_SEND_DECISION,
+} from "../shared.js";
+
 // Handle user decision
 let _decided = false;
 
 function decide(send) {
   if (_decided) return;
   _decided = true;
-  browser.runtime.sendMessage({ type: "sendDecision", send });
+  browser.runtime.sendMessage({ type: MSG_SEND_DECISION, send });
 }
 
 document.getElementById("sendAnyway").addEventListener("click", () => {
@@ -29,13 +37,13 @@ document.getElementById("goBack").addEventListener("click", () => {
   if (!tabId) return;
 
   const state = await browser.runtime.sendMessage({
-    type: "getValidationState",
+    type: MSG_GET_VALIDATION_STATE,
     tabId,
   });
   render(state);
 })();
 
-function render({ stage, valid, message, from }) {
+function render({ status, valid, message, from }) {
   const statusEl = document.getElementById("status");
   const prefixEl = document.getElementById("prefix");
   const fromEl = document.getElementById("from");
@@ -58,10 +66,10 @@ function render({ stage, valid, message, from }) {
     statusEl.className = "invalid";
   }
 
-  buttonsEl.style.display = stage === "sending" ? "flex" : "none";
+  buttonsEl.style.display = status === "sending" ? "flex" : "none";
 
   // Make the go back action the default, send requires explicit click
-  if (stage === "sending") {
+  if (status === ComposeStatus.SENDING) {
     document.getElementById("goBack").focus();
   }
   // Fallback when popup dismissed without a button click
